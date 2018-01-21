@@ -1,6 +1,8 @@
 /* Relative humidity and temperature monitoring
 /* using the DHT22/AM2302 sensor
-/* DHT Library: https://playground.arduino.cc/Main/DHTLib */
+/* DHT Library: https://playground.arduino.cc/Main/DHTLib
+/* Initialization procedure from
+/* https://forum.arduino.cc/index.php?topic=184356.msg1753894#msg1753894 */
 
 #include <LiquidCrystal.h>
 #include "dht.h"
@@ -15,22 +17,42 @@ const int d6 = 3;
 const int d7 = 2;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
-dht DHT; // create a DHT object
 const int dataPin = 8;
+const int vccPin = 9;
 
 void setup()
 {
   Serial.begin(9600);
-  Serial.println("Type,\tStatus,\tTemperature (C),\tHumidity (%)");
+  Serial.println("Status,\tTemperature (C),\tHumidity (%)");
+  
+  pinMode(vccPin, OUTPUT);
+  digitalWrite(vccPin, LOW);
   
   // set up the LCD's number of columns and rows
   lcd.begin(16, 2);
+  
+  lcd.setCursor(0, 0);
+  lcd.print("Initializing...");
+  lcd.setCursor(0, 1);
+  lcd.print("Wait 120 sec");
 }
 
 void loop()
-{
-  Serial.print("DHT22, \t");
- 
+{ 
+  // wait 120 seconds
+  delay(120000);
+  
+  // bring VCC to high status
+  digitalWrite(vccPin, HIGH);
+  
+  // delay 1 second
+  delay(1000);
+  
+  dht DHT; // create a DHT instance
+  
+  // wait 15 seconds
+  delay(15000);
+  
   int data = DHT.read22(dataPin); // reads the data from the sensor
   
   switch(data)
@@ -56,15 +78,17 @@ void loop()
   Serial.print(",\t");
   Serial.println(rh, 1);
   
-  // present the results on the LCD as well
+  // output the results on the LCD as well
+  lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print("Temp: ");
+  lcd.print("Temp = ");
   lcd.print(temp, 1);
   lcd.print(" C");
   lcd.setCursor(0, 1);
-  lcd.print("Humidity: ");
+  lcd.print("RH = ");
   lcd.print(rh, 1);
   lcd.print(" %");
   
-  delay(10000);
+  // bring VCC to low status
+  digitalWrite(vccPin, LOW);
 }
